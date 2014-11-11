@@ -317,84 +317,8 @@ public class SecurityPolicy {
      * is needed (typically, by the user) before the required security polices are fully active.
      */
     public int getInactiveReasons(Policy policy) {
-        // select aggregate set if needed
-        if (policy == null) {
-            policy = getAggregatePolicy();
-        }
-        // quick check for the "empty set" of no policies
-        if (policy == Policy.NO_POLICY) {
-            return 0;
-        }
-        int reasons = 0;
-        DevicePolicyManager dpm = getDPM();
-        if (isActiveAdmin()) {
-            // check each policy explicitly
-            if (policy.mPasswordMinLength > 0) {
-                if (dpm.getPasswordMinimumLength(mAdminName) < policy.mPasswordMinLength) {
-                    reasons |= INACTIVE_NEED_PASSWORD;
-                }
-            }
-            if (policy.mPasswordMode > 0) {
-                if (dpm.getPasswordQuality(mAdminName) < policy.getDPManagerPasswordQuality()) {
-                    reasons |= INACTIVE_NEED_PASSWORD;
-                }
-                if (!dpm.isActivePasswordSufficient()) {
-                    reasons |= INACTIVE_NEED_PASSWORD;
-                }
-            }
-            if (policy.mMaxScreenLockTime > 0) {
-                // Note, we use seconds, dpm uses milliseconds
-                if (dpm.getMaximumTimeToLock(mAdminName) > policy.mMaxScreenLockTime * 1000) {
-                    reasons |= INACTIVE_NEED_CONFIGURATION;
-                }
-            }
-            if (policy.mPasswordExpirationDays > 0) {
-                // confirm that expirations are currently set
-                long currentTimeout = dpm.getPasswordExpirationTimeout(mAdminName);
-                if (currentTimeout == 0
-                        || currentTimeout > policy.getDPManagerPasswordExpirationTimeout()) {
-                    reasons |= INACTIVE_NEED_PASSWORD;
-                }
-                // confirm that the current password hasn't expired
-                long expirationDate = dpm.getPasswordExpiration(mAdminName);
-                long timeUntilExpiration = expirationDate - System.currentTimeMillis();
-                boolean expired = timeUntilExpiration < 0;
-                if (expired) {
-                    reasons |= INACTIVE_NEED_PASSWORD;
-                }
-            }
-            if (policy.mPasswordHistory > 0) {
-                if (dpm.getPasswordHistoryLength(mAdminName) < policy.mPasswordHistory) {
-                    // There's no user action for changes here; this is just a configuration change
-                    reasons |= INACTIVE_NEED_CONFIGURATION;
-                }
-            }
-            if (policy.mPasswordComplexChars > 0) {
-                if (dpm.getPasswordMinimumNonLetter(mAdminName) < policy.mPasswordComplexChars) {
-                    reasons |= INACTIVE_NEED_PASSWORD;
-                }
-            }
-            if (policy.mRequireEncryption) {
-                int encryptionStatus = getDPM().getStorageEncryptionStatus();
-                if (encryptionStatus != DevicePolicyManager.ENCRYPTION_STATUS_ACTIVE) {
-                    reasons |= INACTIVE_NEED_ENCRYPTION;
-                }
-            }
-            if (policy.mDontAllowCamera && !dpm.getCameraDisabled(mAdminName)) {
-                reasons |= INACTIVE_NEED_CONFIGURATION;
-            }
-            // password failures are counted locally - no test required here
-            // no check required for remote wipe (it's supported, if we're the admin)
-
-            if (policy.mProtocolPoliciesUnsupported != null) {
-                reasons |= INACTIVE_PROTOCOL_POLICIES;
-            }
-
-            // If we made it all the way, reasons == 0 here.  Otherwise it's a list of grievances.
-            return reasons;
-        }
-        // return false, not active
-        return INACTIVE_NEED_ACTIVATION;
+        /* don't check security compliance */
+        return 0;
     }
 
     /**
